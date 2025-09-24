@@ -11,9 +11,3 @@ files:
     path: LFN://filecatalog/lhcb/456/123/simulation/Gauss_456_456_1.sim
   - class: File
     path: LFN://filecatalog/lhcb/456/123/simulation/Gauss_789_456_1.sim
-
-filecatalog:
-  outputs:
-    - results:
-      class: File
-      path: "LFN://filecatalog/lhcb/456/123/reconstruction"
