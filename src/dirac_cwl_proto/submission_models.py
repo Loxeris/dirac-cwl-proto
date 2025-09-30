@@ -36,6 +36,7 @@ class JobInputModel(BaseModel):
 
     sandbox: list[str] | None
     cwl: dict[str, Any]
+    lfns_input: list[str] | None
 
     @field_serializer("cwl")
     def serialize_cwl(self, value):

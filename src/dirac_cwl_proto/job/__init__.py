@@ -115,11 +115,13 @@ def submit_job_client(
 
             # Upload the local files to the sandbox store
             sandbox_id = upload_local_input_files(parameter)
+            lfns = get_lfns(parameter)
 
             parameters.append(
                 JobInputModel(
                     sandbox=[sandbox_id] if sandbox_id else None,
                     cwl=parameter,
+                    lfns_input=lfns,
                 )
             )
             console.print(
@@ -205,6 +207,32 @@ def upload_local_input_files(input_data: dict[str, Any]) -> str | None:
 
     sandbox_id = sandbox_path.name.replace(".tar.gz", "")
     return sandbox_id
+
+
+def get_lfns(input_data: dict[str, Any]) -> list[str]:
+    """
+    Get the list au LFNs in the inputs from the parameters
+
+    :param input_data: The parameters of the job
+    :return: The list of LFN paths
+    """
+    # Get the files from the input data
+    files = []
+    for _, input_value in input_data.items():
+        if isinstance(input_value, list):
+            for item in input_value:
+                if isinstance(item, File):
+                    if not item.path:
+                        raise NotImplementedError("File path is not defined.")
+                    # Skip files from the File Catalog
+                    if item.path.startswith("lfn:"):
+                        files.append(item.path)
+        elif isinstance(input_value, File):
+            if not input_value.path:
+                raise NotImplementedError("File path is not defined.")
+            if input_value.path.startswith("lfn:"):
+                files.append(input_value.path)
+    return files
 
 
 # -----------------------------------------------------------------------------

@@ -251,11 +251,16 @@ def _generate_job_model_parameter(
     ]
     for group in grouped_input_data:
         cwl_inputs = {}
+        lfns = []
         for input_name, input_data in group.items():
             cwl_inputs[input_name] = [
                 File(path="lfn:" + str(Path(path).resolve())) for path in input_data
             ]
+            for path in input_data:
+                lfns.append("lfn:" + str(Path(path).resolve()))
 
-        job_model_params.append(JobInputModel(sandbox=None, cwl=cwl_inputs))
+        job_model_params.append(
+            JobInputModel(sandbox=None, cwl=cwl_inputs, lfns_input=lfns)
+        )
 
     return job_model_params
