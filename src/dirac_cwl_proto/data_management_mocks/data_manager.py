@@ -1,13 +1,10 @@
 from pathlib import Path
 
 from DIRAC.Resources.Storage.FileStorage import FileStorage  # type: ignore[import-untyped]
-
-from dirac_cwl_proto.execution_hooks.data_management.file_catalog import (
-    LocalFileCatalog,
-)
+from DIRACCommon.Core.Utilities.ReturnValues import S_OK  # type: ignore[import-untyped]
 
 
-class DataManager:
+class DataManagerMock:
     """Interface for managing data operations via DIRAC Storage and File Catalogs.
 
     The ``DataManager`` provides a unified interface to handle file transfers,
@@ -26,17 +23,11 @@ class DataManager:
     components.
     """
 
-    def __init__(self, file_catalog=None):
-        if file_catalog == "LocalFileCatalog":
-            self.file_catalog = LocalFileCatalog()
-            self.base_storage_path = "filecatalog"
-            self.storage_element = FileStorage(
-                "local", {"Path": self.base_storage_path}
-            )
-        else:
-            self.file_catalog = None
+    def __init__(self):
+        self.base_storage_path = "filecatalog"
+        self.storage_element = FileStorage("local", {"Path": self.base_storage_path})
 
-    def get_file(self, lfn, destinationDir=".", sourceSE=None):
+    def getFile(self, lfn, destinationDir=".", sourceSE=None):
         """Download a file (or files) from a DIRAC Storage Element.
 
         Parameters
@@ -68,19 +59,17 @@ class DataManager:
         else:
             raise ValueError()
 
-        replicas = self.get_replicas(lfns)
-        if replicas:
-            if not sourceSE:
-                sourceSE = self.storage_element
-            for lfn in replicas:
-                res = sourceSE.getFile(str(lfn).removeprefix("lfn:"), destinationDir)
-                if not res["OK"]:
-                    raise FileNotFoundError(
-                        f"Could not download lfn {lfn} : {res['Message']}"
-                    )
-            return [Path(lfn).name for lfn in lfns]
+        if not sourceSE:
+            sourceSE = self.storage_element
+        for lfn in lfns:
+            res = sourceSE.getFile(str(lfn).removeprefix("lfn:"), destinationDir)
+            if not res["OK"]:
+                raise FileNotFoundError(
+                    f"Could not download lfn {lfn} : {res['Message']}"
+                )
+        return S_OK([Path(lfn).name for lfn in lfns])
 
-    def put_and_register(
+    def putAndRegister(
         self,
         lfn,
         fileName,
@@ -99,7 +88,7 @@ class DataManager:
         fileName : str | Path
             Path to the file to upload.
         diracSE : Any, optional
-            Specific Storage Element to use. Defaults to the instance’s configured one.
+            Specific Storage Element to use. Defaults to the instance’s configured one. Ignored in local testing
         guid : str, optional
             Globally unique identifier for the file. Currently unused.
         path : str, optional
@@ -114,6 +103,7 @@ class DataManager:
         This method currently delegates to :meth:`put` and does not update
         the file catalog.
         """
+
         # TODO use file catalog as well
         return self.put(lfn, fileName, diracSE, path)
 
@@ -127,7 +117,7 @@ class DataManager:
         fileName : str | Path
             Path to the file to be uploaded.
         diracSE : Any, optional
-            Specific storage element to use. Defaults to the configured one.
+            Specific storage element to use. Defaults to the configured one. Ignored in local testing
         path : str, optional
             Target directory path within the storage element.
 
@@ -136,27 +126,11 @@ class DataManager:
         RuntimeError
             If no storage element is configured.
         """
-        se = diracSE if diracSE else self.storage_element
+        se = self.storage_element
         if not se:
             raise RuntimeError("No Storage Element defined")
         if not path:
             path = str(lfn).removeprefix("lfn:")
         dest = str(Path(path) / Path(fileName).name)
         se.putFile({dest: fileName})
-
-    def get_replicas(self, lfns):
-        """Get replica information for one or more LFN.
-
-        Parameters
-        ----------
-        lfns : list[str]
-            List of LFNs to query.
-
-        Returns
-        -------
-        list | None
-            Replica metadata from the file catalog, or ``None`` if unavailable.
-        """
-        if self.file_catalog:
-            return self.file_catalog.get_replicas(lfns)
-        return None
+        return S_OK({"Successful": [lfn], "Failed": []})
