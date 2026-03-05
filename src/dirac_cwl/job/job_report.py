@@ -139,7 +139,7 @@ class JobReport:
         if not self.job_status_info:
             return
         body = {self.job_id: self.job_status_info}
-        ret = await self._client.jobs.set_job_statuses(body)
+        ret = self._client.jobs.set_job_statuses(body)
         if ret.success:
             self.job_status_info = {}
         else:
@@ -150,7 +150,7 @@ class JobReport:
         if not self.job_parameters:
             return
         body = {self.job_id: self.job_parameters}
-        ret = await self._client.jobs.patch_metadata(body)
+        ret = self._client.jobs.patch_metadata(body)
         if ret.success:
             self.job_parameters = {}
         else:

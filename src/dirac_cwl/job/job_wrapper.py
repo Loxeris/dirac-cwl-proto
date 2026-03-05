@@ -23,7 +23,6 @@ from cwl_utils.parser.cwl_v1_2 import (
 from DIRACCommon.Core.Utilities.ReturnValues import (  # type: ignore[import-untyped]
     returnValueOrRaise,
 )
-from diracx.client.aio import AsyncDiracClient
 from rich.text import Text
 from ruamel.yaml import YAML
 
@@ -55,7 +54,7 @@ logger = logging.getLogger(__name__)
 class JobWrapper:
     """Job Wrapper for the execution hook."""
 
-    def __init__(self, job_id=0) -> None:
+    def __init__(self, job_id=0, client=None) -> None:
         """Initialize the job wrapper."""
         self.execution_hooks_plugin: ExecutionHooksBasePlugin | None = None
         self.job_path: Path = Path()
@@ -64,7 +63,7 @@ class JobWrapper:
         if os.getenv("DIRAC_PROTO_LOCAL") == "1":
             self.job_report: JobReport = JobReportMock(self.job_id, src, None)
         else:
-            self.job_report = JobReport(self.job_id, src, AsyncDiracClient())
+            self.job_report = JobReport(self.job_id, src, client)
         self.job_report.setJobStatus(JobStatus.RUNNING, JobMinorStatus.JOB_INITIALIZATION)
 
     async def __download_input_sandbox(self, arguments: JobInputModel, job_path: Path) -> None:
