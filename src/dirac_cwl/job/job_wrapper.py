@@ -101,7 +101,7 @@ class JobWrapper:
             logger.info(
                 "Successfully stored output %s in Sandbox %s", self.execution_hooks_plugin.output_sandbox, sb_path
             )
-            await AsyncDiracClient().jobs.assign_sandbox_to_job(self.job_id, str(sb_path))
+            await AsyncDiracClient().jobs.assign_sandbox_to_job(self.job_id, f'"{sb_path}"')
             self.job_report.setJobStatus(JobStatus.COMPLETING, minor_status=JobMinorStatus.OUTPUT_SANDBOX_UPLOADED)
 
     async def __download_input_data(self, inputs: JobInputModel, job_path: Path) -> dict[str, Path | list[Path]]:
