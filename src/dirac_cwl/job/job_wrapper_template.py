@@ -83,6 +83,7 @@ def initDiracX() -> None:
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
     if os.getenv("DIRAC_PROTO_LOCAL") != "1":
         initDiracX()
     sys.exit(asyncio.run(main()))
