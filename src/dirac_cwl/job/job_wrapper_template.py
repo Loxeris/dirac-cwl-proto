@@ -20,7 +20,7 @@ from dirac_cwl.job.job_wrapper import JobWrapper
 from dirac_cwl.submission_models import JobModel
 
 
-async def main(client=None):
+async def main():
     """Execute the job wrapper for a given job model."""
     if len(sys.argv) != 3:
         logging.error("2 arguments required, <json-file> <jobID>")
@@ -29,7 +29,7 @@ async def main(client=None):
     job_id = int(sys.argv[2])
 
     job_json_file = sys.argv[1]
-    job_wrapper = JobWrapper(job_id, client=client)
+    job_wrapper = JobWrapper(job_id)
     with open(job_json_file, "r") as file:
         job_model_dict = json.load(file)
 
@@ -57,8 +57,4 @@ async def main(client=None):
 
 
 if __name__ == "__main__":
-    if os.getenv("DIRAC_PROTO_LOCAL") != "1":
-        with DIRAC.Core.Security.DiracX.DiracXClient() as client:
-            sys.exit(asyncio.run(main(client=client)))
-    else:
-        sys.exit(asyncio.run(main()))
+    sys.exit(asyncio.run(main()))
